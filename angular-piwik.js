@@ -69,7 +69,7 @@
   ]);
 
   mod.directive('ngpPiwik', [
-    '$window', 'Piwik', 'PiwikActionMethods', function($window, Piwik, PiwikActionMethods) {
+    '$window', '$document', 'Piwik', 'PiwikActionMethods', function($window, $document, Piwik, PiwikActionMethods) {
       var arr_param_methods, build_p_call, comma_regex, dir_def_obj;
       $window['_paq'] = $window['_paq'] || [];
       arr_param_methods = ['setDomains', 'setDownloadClasses', 'setIgnoreClasses', 'setLinkClasses'];
@@ -91,32 +91,33 @@
       };
       dir_def_obj = {
         restrict: 'EM',
-        replace: true,
+        replace: false,
         transclue: true,
-        scope: {
-          piwikUrl: '@ngpSetJsUrl'
-        },
-        template: "<script type='text/javascript' src='{{piwikUrl}}'>\n</script>",
-        link: function(scope, elem, attrs) {
-          var k, v;
-          for (k in attrs) {
-            if (!__hasProp.call(attrs, k)) continue;
-            v = attrs[k];
-            if (/^ngp/.test(k)) {
-              (function(k, v) {
-                var method;
-                method = k[3].toLowerCase() + k.slice(4);
-                if (!(__indexOf.call(PiwikActionMethods, method) >= 0)) {
-                  return;
+        compile: function(tElement, tAttrs, transclude) {
+          $document.find('body').append("<script src=\"" + tAttrs.ngpSetJsUrl + "\" type=\"text/javascript\"></script>");
+          return {
+            post: function(scope, elem, attrs) {
+              var k, v;
+              for (k in attrs) {
+                if (!__hasProp.call(attrs, k)) continue;
+                v = attrs[k];
+                if (/^ngp/.test(k)) {
+                  (function(k, v) {
+                    var method;
+                    method = k[3].toLowerCase() + k.slice(4);
+                    if (!(__indexOf.call(PiwikActionMethods, method) >= 0)) {
+                      return;
+                    }
+                    $window['_paq'].push(build_p_call(method, v));
+                    return attrs.$observe(k, function(val) {
+                      return $window['_paq'].push(build_p_call(method, val));
+                    });
+                  })(k, v);
                 }
-                $window['_paq'].push(build_p_call(method, v));
-                return attrs.$observe(k, function(val) {
-                  return $window['_paq'].push(build_p_call(method, val));
-                });
-              })(k, v);
+              }
+              return $window['_paq'].push(['trackPageView']);
             }
-          }
-          return $window['_paq'].push(['trackPageView']);
+          };
         }
       };
       return dir_def_obj;
