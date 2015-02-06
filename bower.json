@@ -3,6 +3,6 @@
   "version": "1.0.2",
   "main": "./angular-piwik.js",
   "dependencies": {
-    "angular": "~1.0.5"
+    "angular": ">=1.0.5 <1.4"
   }
 }
